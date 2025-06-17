@@ -1,0 +1,17 @@
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+
+# Ignore models
+models/
+
+# Ignore local attendance records and test files
+attendance/
+test.py
+
+# Ignore compiled cache from specific subfolders (if any still tracked)
+attendance_log/__pycache__/
+camera_capture/__pycache__/
+database/__pycache__/
+face_detection/__pycache__/
+face_recognition/__pycache__/
