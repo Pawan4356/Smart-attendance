@@ -2,7 +2,7 @@ import os
 import cv2
 import numpy as np
 from database.mongo_utils import insert_student
-# from face_recognition.arcface_model import get_arcface_embedding  # Uncomment if using actual embeddings
+from face_recognition.arcface_model import get_arcface_embedding  # Uncomment if using actual embeddings
 
 def enroll_students_from_folder(folder_path="./faces", use_temp_embedding=True):
     """
@@ -39,8 +39,8 @@ def enroll_students_from_folder(folder_path="./faces", use_temp_embedding=True):
             if use_temp_embedding:
                 embedding = np.random.rand(5).astype(np.float32)
             else:
-                # embedding = get_arcface_embedding(img)  # Uncomment when real model is available
-                raise NotImplementedError("ArcFace embedding not implemented yet")
+                embedding = get_arcface_embedding(img)  # Uncomment when real model is available
+                # raise NotImplementedError("ArcFace embedding not implemented yet")
 
             insert_student(student_id, name, class_id, embedding)
             print(f"[OK] Enrolled: {name} ({student_id})")

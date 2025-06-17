@@ -4,14 +4,17 @@ from datetime import datetime
 from pymongo import MongoClient
 
 client = MongoClient("mongodb://localhost:27017/")
-db = client["COD1"]
-attendance_col = db["attendance"]
 
 def log_attendance_bulk(student_ids, class_id):
     """
-    Logs attendance for multiple student_ids for today's date in class `COD1`.
+    Logs attendance for multiple student_ids in the database named after `class_id`.
+    Collection name remains 'attendance'.
+    Avoids duplicate entries for the same student on the same date.
     """
+    db = client[class_id]  # Use class_id as database name
+    attendance_col = db["attendance"]
     today = datetime.today().strftime("%Y-%m-%d")
+
     for student_id in student_ids:
         record = {
             "student_id": student_id,
@@ -21,7 +24,6 @@ def log_attendance_bulk(student_ids, class_id):
             "status": "Present"
         }
 
-        # Avoid duplicate entries for same student on same day
         if not attendance_col.find_one({"student_id": student_id, "class_id": class_id, "date": today}):
             attendance_col.insert_one(record)
             print(f"Marked present: {student_id}")
