@@ -15,3 +15,7 @@ camera_capture/__pycache__/
 database/__pycache__/
 face_detection/__pycache__/
 face_recognition/__pycache__/
+
+# Ignore all the images in the  captures folder
+captures/*
+!captures/.gitkeep

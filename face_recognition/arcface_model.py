@@ -7,7 +7,11 @@ import onnxruntime as ort
 model_path = "models/w600k_r50.onnx"
 assert os.path.exists(model_path), "ArcFace ONNX model not found at models/w600k_r50.onnx"
 
-arcface_session = ort.InferenceSession(model_path, providers=['CPUExecutionProvider'])
+# Prefer GPU if available, else fallback to CPU
+arcface_session = ort.InferenceSession(
+    model_path,
+    providers=['CUDAExecutionProvider', 'CPUExecutionProvider']
+)
 input_name = arcface_session.get_inputs()[0].name
 
 def get_arcface_embedding(face_img):

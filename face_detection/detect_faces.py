@@ -4,15 +4,12 @@ import numpy as np
 from ultralytics import YOLO
 import onnxruntime as ort
 from datetime import datetime
-from face_recognition.arcface_model import get_arcface_embedding
-from face_recognition.recognize import recognize_faces, build_faiss_index
 
 # --- Load Models ---
-yolo_model = YOLO("models/yolov11n-face.pt")
+yolo_model = YOLO("models/yolov8n-face.pt")
     
 # --- Constants ---
-# INPUT_DIR = "captures"
-INPUT_DIR = "faces"
+INPUT_DIR = "captures"
 FACE_SIZE = (112, 112)
 
 def preprocess_face(face_img):
@@ -22,7 +19,7 @@ def preprocess_face(face_img):
     face_input = np.transpose(face_norm, (2, 0, 1))[None].astype(np.float32)
     return face_input
 
-def detect_and_process():
+def detect_and_process(class_id, threshold):
     if not os.listdir(INPUT_DIR):
         print("No images found in captures/")
         return
@@ -53,21 +50,17 @@ def detect_and_process():
         print("No valid faces detected.")
         return
 
-    # embeddings = get_arcface_embedding(faces)
-    embeddings = [get_arcface_embedding(face[0]) for face in faces]
-    index, labels = build_faiss_index()
+    return faces
 
-    recognized_ids = recognize_faces(embeddings)
+    # for i, (box, student_id) in enumerate(zip(boxes, recognized_ids)):
+    #     x1, y1, x2, y2 = map(int, box)
+    #     label = student_id if student_id else "Unknown"
+    #     color = (0, 255, 0) if student_id else (0, 0, 255)
+    #     cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+    #     cv2.putText(img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
-    for i, (box, student_id) in enumerate(zip(boxes, recognized_ids)):
-        x1, y1, x2, y2 = map(int, box)
-        label = student_id if student_id else "Unknown"
-        color = (0, 255, 0) if student_id else (0, 0, 255)
-        cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
-        cv2.putText(img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
-
-    # Save the annotated image
-    save_path = f"annotated/{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
-    os.makedirs("annotated", exist_ok=True)
-    cv2.imwrite(save_path, img)
-    print(f"Saved annotated result to {save_path}")
+    # # Save the annotated image
+    # save_path = f"annotated/{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+    # os.makedirs("annotated", exist_ok=True)
+    # cv2.imwrite(save_path, img)
+    # print(f"Saved annotated result to {save_path}")

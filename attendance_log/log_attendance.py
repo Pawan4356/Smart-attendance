@@ -19,6 +19,8 @@ def get_current_period():
         (time(12, 15), time(13, 15), 4),
         (time(14, 0), time(15, 0), 5),
         (time(15, 0), time(16, 0), 6),
+        (time(17, 0), time(18, 0), 7), # Delete later
+        (time(18, 0), time(19, 0), 8), # Delete later
     ]
 
     for start, end, period in periods:

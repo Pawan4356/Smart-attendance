@@ -40,7 +40,7 @@ def recognize_faces_mongo(face_embeddings, class_id, threshold=0.35):
 
     return matched_ids
 
-# Temp Funcition
+# Temporary Funcition
 
 import cv2
 from face_recognition.arcface_model import get_arcface_embedding
