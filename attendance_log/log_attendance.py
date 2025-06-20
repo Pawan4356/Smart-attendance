@@ -12,13 +12,17 @@ def get_current_period():
     """
     now = datetime.now().time()
 
+    # periods = [
+    #     (time(9, 0), time(10, 0), 1),
+    #     (time(10, 0), time(11, 0), 2),
+    #     (time(11, 15), time(12, 15), 3),
+    #     (time(12, 15), time(13, 15), 4),
+    #     (time(14, 0), time(15, 0), 5),
+    #     (time(15, 0), time(16, 0), 6),
+    # ]
+
     periods = [
-        (time(9, 0), time(10, 0), 1),
-        (time(10, 0), time(11, 0), 2),
-        (time(11, 15), time(12, 15), 3),
-        (time(12, 15), time(13, 15), 4),
-        (time(14, 0), time(15, 0), 5),
-        (time(15, 0), time(16, 0), 6),
+        (time(9, 0), time(20, 0), 1),
     ]
 
     for start, end, period in periods:

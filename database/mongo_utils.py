@@ -57,3 +57,8 @@ def insert_student(student_id, name, class_id, embedding):
             upsert=True
         )
         print(f"Inserted new student {student_id} with {len(new_embeddings)} embeddings.")
+
+def get_student_by_id(class_id, student_id):
+    db = client[class_id]
+    col = db["students"]
+    return col.find_one({"student_id": student_id})

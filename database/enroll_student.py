@@ -38,17 +38,18 @@ def augment_image(img):
 
     return augmented[:AUG_PER_IMAGE]
 
+from database.mongo_utils import get_student_by_id  # ADD THIS IMPORT
+
 def enroll_students_from_folder(folder_path="./faces"):
     """
     Enroll students by processing image files from a folder.
-    Filenames must follow: ClassID_StudentID_Name_With_Underscores.jpg
+    Skips if student already has enough embeddings stored.
     """
     for filename in os.listdir(folder_path):
         if not filename.lower().endswith(('.jpg', '.jpeg', '.png')):
             continue
 
         try:
-            # Parse: COD1_ET23BTCO046_Pawankumar_Navinchandra.jpg
             name_without_ext = os.path.splitext(filename)[0]
             parts = name_without_ext.split("_", 2)
 
@@ -59,17 +60,23 @@ def enroll_students_from_folder(folder_path="./faces"):
             class_id, student_id, name_part = parts
             name = name_part.replace("_", " ")
 
+            # Check existing data
+            existing = get_student_by_id(class_id, student_id)
+            if existing:
+                stored_embs = existing.get("embeddings", []) or [existing.get("embedding")]
+                if stored_embs and len(stored_embs) >= MAX_EMBEDDINGS:
+                    print(f"[ℹ] Skipping {student_id} — already has {len(stored_embs)} embeddings.")
+                    continue
+
             image_path = os.path.join(folder_path, filename)
             img = cv2.imread(image_path)
-
             if img is None:
                 print(f"[ERROR] Couldn't read image: {filename}")
                 continue
 
-            # Align before embedding
             img = align_face(img)
 
-            # Prepare all embeddings
+            # Augment + Embed
             images = [img] + augment_image(img)
             embeddings = []
             for im in images:
