@@ -1,14 +1,14 @@
-import schedule
 import time
+import schedule 
 from camera_capture.capture import capture_frame
 from face_detection.detect_faces import detect_and_process
-from face_recognition.arcface_model import get_arcface_embedding
 from face_recognition.recognize import recognize_faces_mongo
 from attendance_log.log_attendance import log_attendance_bulk
 from database.enroll_student import enroll_students_from_folder
+from face_recognition.arcface_model import get_arcface_embedding
 
 class_id = "COD1"
-threshold = 0.5
+threshold = 0.35
 
 def scheduled_task():
     capture_frame()

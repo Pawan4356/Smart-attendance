@@ -1,24 +1,54 @@
 import os
 import cv2
+import warnings
 import numpy as np
 from database.mongo_utils import insert_student
-from face_recognition.arcface_model import get_arcface_embedding 
+from face_recognition.face_alignment import align_face
+from face_recognition.arcface_model import get_arcface_embedding
 
-def enroll_students_from_folder(folder_path="./faces", use_temp_embedding=True):
+AUG_PER_IMAGE = 5  # How many augmented embeddings to generate per student
+MAX_EMBEDDINGS = 6
+
+def augment_image(img):
+    augmented = []
+
+    # Horizontal Flip
+    augmented.append(cv2.flip(img, 1))
+
+    # Brightness/Contrast
+    alpha = 1 + 0.2 * (np.random.rand() - 0.5)
+    beta = 20 * (np.random.rand() - 0.5) * 2
+    augmented.append(cv2.convertScaleAbs(img, alpha=alpha, beta=beta))
+
+    # Rotation
+    h, w = img.shape[:2]
+    angle = np.random.uniform(-10, 10)
+    M = cv2.getRotationMatrix2D((w/2, h/2), angle, 1)
+    rotated = cv2.warpAffine(img, M, (w, h))
+    augmented.append(rotated)
+
+    # Gaussian Blur
+    blurred = cv2.GaussianBlur(img, (5, 5), 0)
+    augmented.append(blurred)
+
+    # Add Noise
+    noise = np.random.normal(0, 10, img.shape).astype(np.uint8)
+    noisy = cv2.add(img, noise)
+    augmented.append(noisy)
+
+    return augmented[:AUG_PER_IMAGE]
+
+def enroll_students_from_folder(folder_path="./faces"):
     """
     Enroll students by processing image files from a folder.
-    Filenames should follow the format: ClassID_StudentID_Name_With_Underscores.jpg
-
-    Args:
-        folder_path (str): Path to the folder containing student images.
-        use_temp_embedding (bool): If True, use random 512-dim embeddings.
+    Filenames must follow: ClassID_StudentID_Name_With_Underscores.jpg
     """
     for filename in os.listdir(folder_path):
         if not filename.lower().endswith(('.jpg', '.jpeg', '.png')):
             continue
 
         try:
-            # Parse filename
+            # Parse: COD1_ET23BTCO046_Pawankumar_Navinchandra.jpg
             name_without_ext = os.path.splitext(filename)[0]
             parts = name_without_ext.split("_", 2)
 
@@ -36,16 +66,24 @@ def enroll_students_from_folder(folder_path="./faces", use_temp_embedding=True):
                 print(f"[ERROR] Couldn't read image: {filename}")
                 continue
 
-            embedding = get_arcface_embedding(img)
-            
-            # if use_temp_embedding:
-            #     embedding = np.random.rand(5).astype(np.float32)
-            # else:
-            #     embedding = get_arcface_embedding(img)
-            #     raise NotImplementedError("ArcFace embedding not implemented yet")
+            # Align before embedding
+            img = align_face(img)
 
-            insert_student(student_id, name, class_id, embedding)
-            print(f"[OK] Enrolled: {name} ({student_id})")
+            # Prepare all embeddings
+            images = [img] + augment_image(img)
+            embeddings = []
+            for im in images:
+                try:
+                    emb = get_arcface_embedding(im)
+                    embeddings.append(emb)
+                except Exception as emb_err:
+                    warnings.warn(f"Embedding failed for {filename}: {emb_err}")
+
+            if embeddings:
+                insert_student(student_id, name, class_id, embeddings)
+                print(f"[OK] Enrolled: {name} ({student_id}) with {len(embeddings)} embeddings")
+            else:
+                print(f"[SKIP] No valid embeddings for {student_id}")
 
         except Exception as e:
             print(f"[ERROR] Failed to process {filename}: {e}")

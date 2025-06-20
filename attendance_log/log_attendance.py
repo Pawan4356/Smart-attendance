@@ -1,7 +1,7 @@
 # attendance_log/log_attendance.py
 
-from datetime import datetime, time
 from pymongo import MongoClient
+from datetime import datetime, time
 
 client = MongoClient("mongodb://localhost:27017/")
 
@@ -19,8 +19,6 @@ def get_current_period():
         (time(12, 15), time(13, 15), 4),
         (time(14, 0), time(15, 0), 5),
         (time(15, 0), time(16, 0), 6),
-        (time(17, 0), time(18, 0), 7), # Delete later
-        (time(18, 0), time(19, 0), 8), # Delete later
     ]
 
     for start, end, period in periods:
@@ -43,25 +41,23 @@ def log_attendance_bulk(student_ids, class_id):
     today = datetime.today().strftime("%Y-%m-%d")
 
     for student_id in student_ids:
-        record = {
-            "student_id": student_id,
-            "class_id": class_id,
-            "timestamp": datetime.now(),
-            "date": today,
-            "hour": current_period,
-            "status": "Present"
-        }
-
-        if current_period is None:
-            print("[⚠] No active period right now. Attendance not logged.")
-
         # Prevent duplicates for same student on same date and period
-        if not attendance_col.find_one({
+        already_marked = attendance_col.find_one({
             "student_id": student_id,
             "class_id": class_id,
             "date": today,
             "hour": current_period
-        }):
+        })
+
+        if not already_marked:
+            record = {
+                "student_id": student_id,
+                "class_id": class_id,
+                "timestamp": datetime.now(),
+                "date": today,
+                "hour": current_period,
+                "status": "Present"
+            }
             attendance_col.insert_one(record)
             print(f"[✔] Marked present: {student_id} | Period {current_period}")
         else:
