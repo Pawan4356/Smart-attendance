@@ -16,9 +16,20 @@ def augment_image(img):
     augmented.append(cv2.flip(img, 1))
 
     # Brightness/Contrast
-    alpha = 1 + 0.2 * (np.random.rand() - 0.5)
-    beta = 20 * (np.random.rand() - 0.5) * 2
-    augmented.append(cv2.convertScaleAbs(img, alpha=alpha, beta=beta))
+    # Convert to LAB color space for better contrast enhancement
+    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(lab)
+
+    # Apply CLAHE to the L channel
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    cl = clahe.apply(l)
+
+    # Merge channels and convert back to BGR
+    limg = cv2.merge((cl, a, b))
+    clahe_img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+
+    augmented.append(clahe_img)
+
 
     # Rotation
     h, w = img.shape[:2]
