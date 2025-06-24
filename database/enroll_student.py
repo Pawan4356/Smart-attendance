@@ -30,7 +30,6 @@ def augment_image(img):
 
     augmented.append(clahe_img)
 
-
     # Rotation
     h, w = img.shape[:2]
     angle = np.random.uniform(-15, 15)

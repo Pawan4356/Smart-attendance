@@ -33,9 +33,18 @@ def capture_frame():
 
     ret, frame = cam.read()
     if ret:
+        lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+        l, a, b = cv2.split(lab)
+
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        cl = clahe.apply(l)
+
+        limg = cv2.merge((cl, a, b))
+        clahe_img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M")
         filename = f"captures/{timestamp}.jpg"
-        cv2.imwrite(filename, frame)
+        cv2.imwrite(filename, clahe_img)
         print(f"Captured frame saved to {filename}")
     else:
         print("Failed to capture frame from webcam.")
