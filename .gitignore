@@ -4,6 +4,7 @@ __pycache__/
 
 # Ignore models
 models/
+!models/.gitkeep
 
 # Ignore local attendance records and test files
 attendance/

@@ -10,7 +10,7 @@ client = MongoClient(MONGO_URI)
 MAX_EMBEDDINGS = 6
 
 # Insert or update a student (dynamic DB based on class_id)
-def insert_student(student_id, name, class_id, embedding):
+def insert_student(student_id, name, class_id, new_embeddings):
     if isinstance(new_embeddings, np.ndarray):
         new_embeddings = [new_embeddings.tolist()]
     elif isinstance(new_embeddings, list) and isinstance(new_embeddings[0], np.ndarray):
@@ -50,7 +50,7 @@ def insert_student(student_id, name, class_id, embedding):
             {"$set": {
                 "name": name,
                 "class_id": class_id,
-                "embedding": embedding,
+                "embedding": new_embeddings,
                 "registered_at": datetime.utcnow(),
                 "type": "student"
             }},

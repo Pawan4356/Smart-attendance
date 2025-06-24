@@ -6,11 +6,13 @@ import onnxruntime as ort
 # Load ArcFace ONNX model
 model_path = "models/w600k_r50.onnx"
 assert os.path.exists(model_path), "ArcFace ONNX model not found at models/w600k_r50.onnx"
+providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+available_providers = ort.get_available_providers()
 
 # Prefer GPU if available, else fallback to CPU
 arcface_session = ort.InferenceSession(
     model_path,
-    providers=['CUDAExecutionProvider', 'CPUExecutionProvider']
+    providers=[p for p in providers if p in available_providers]
 )
 input_name = arcface_session.get_inputs()[0].name
 

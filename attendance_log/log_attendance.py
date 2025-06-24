@@ -37,7 +37,7 @@ def log_attendance_bulk(student_ids, class_id):
     """
     current_period = get_current_period()
     if current_period is None:
-        print("[⚠] No active period right now. Attendance not logged.")
+        print("No active period right now. Attendance not logged.")
         return
 
     db = client[class_id]
@@ -45,24 +45,26 @@ def log_attendance_bulk(student_ids, class_id):
     today = datetime.today().strftime("%Y-%m-%d")
 
     for student_id in student_ids:
-        # Prevent duplicates for same student on same date and period
-        already_marked = attendance_col.find_one({
-            "student_id": student_id,
-            "class_id": class_id,
-            "date": today,
-            "hour": current_period
-        })
-
-        if not already_marked:
-            record = {
+        if student_id:  # checks not None and not empty string
+            already_marked = attendance_col.find_one({
                 "student_id": student_id,
                 "class_id": class_id,
-                "timestamp": datetime.now(),
                 "date": today,
-                "hour": current_period,
-                "status": "Present"
-            }
-            attendance_col.insert_one(record)
-            print(f"[✔] Marked present: {student_id} | Period {current_period}")
+                "hour": current_period
+            })
+
+            if not already_marked:
+                record = {
+                    "student_id": student_id,
+                    "class_id": class_id,
+                    "timestamp": datetime.now(),
+                    "date": today,
+                    "hour": current_period,
+                    "status": "Present"
+                }
+                attendance_col.insert_one(record)
+                print(f"Marked present: {student_id} | Period {current_period}")
+            else:
+                print(f"Already marked: {student_id} | Period {current_period}")
         else:
-            print(f"[ℹ] Already marked: {student_id} | Period {current_period}")
+            print("None Recognized!")
