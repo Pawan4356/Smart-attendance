@@ -11,7 +11,6 @@ A real-time face recognition-based attendance system using **YOLOv8/YOLOv11n** f
 - 🧾 **Attendance Logging** in CSV format
 - 🚀 Fast search with FAISS index
 
-
 ## 🛠️ Tech Stack
 
 | Component        | Technology             |
