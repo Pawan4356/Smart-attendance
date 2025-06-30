@@ -1,64 +1,76 @@
-# database/mongo_utils.py
-
 import numpy as np
 from datetime import datetime
 from pymongo import MongoClient
 
-MONGO_URI = "mongodb://localhost:27017"
-client = MongoClient(MONGO_URI)
 
-MAX_EMBEDDINGS = 6
+class MongoHandler:
+    def __init__(self, uri, db_name):
+        self.client = MongoClient(uri)
+        self.db = self.client[db_name]
+        self.students = self.db["students"]
+        self.attendance = self.db["attendance"]
 
-# Insert or update a student (dynamic DB based on class_id)
-def insert_student(student_id, name, class_id, new_embeddings):
-    if isinstance(new_embeddings, np.ndarray):
-        new_embeddings = [new_embeddings.tolist()]
-    elif isinstance(new_embeddings, list) and isinstance(new_embeddings[0], np.ndarray):
-        new_embeddings = [e.tolist() for e in new_embeddings]
+    def find_student_by_name(self, name):
+        return self.students.find_one({"name": name})
+    
+    def get_student_by_id(self, class_id, student_id):
+        col = self.db["students"]
+        return col.find_one({"student_id": student_id})
 
-    # Use class_id as the database name
-    db = client[class_id]
-    students_col = db["students"]
+    def mark_attendance(self, student_id, class_id):
+        record = {
+            "student_id": student_id,
+            "timestamp": datetime.utcnow(),
+            "class_id": class_id
+        }
+        self.attendance.insert_one(record)
+        print(f"[DB] Attendance logged for {student_id} at {record['timestamp']}")
 
-    existing = students_col.find_one({"student_id": student_id})
+    def insert_student(self, student_id, name, class_id, new_embeddings):
+        # Normalize embeddings to list of lists
+        if isinstance(new_embeddings, np.ndarray):
+            new_embeddings = [new_embeddings.tolist()]
+        elif isinstance(new_embeddings, list):
+            new_embeddings = [e.tolist() if isinstance(e, np.ndarray) else e for e in new_embeddings]
 
-    if existing and "embeddings" in existing:
-        current_embs = existing["embeddings"]
-        if len(current_embs) >= MAX_EMBEDDINGS:
-            print(f"Student {student_id} already has {len(current_embs)} embeddings. Skipping.")
-            return
+        # Select class-specific database and collection
+        student_col = self.client[class_id]["students"]
 
-        remaining = MAX_EMBEDDINGS - len(current_embs)
-        new_to_add = new_embeddings[:remaining]
-        updated_embs = current_embs + new_to_add
+        student = student_col.find_one({"student_id": student_id})
 
-        students_col.update_one(
-            {"student_id": student_id},
-            {"$set": {
-                "name": name,
-                "class_id": class_id,
-                "embeddings": updated_embs,
-                "type": "student"
-            }},
-            upsert=True
-        )
-        print(f"Updated {student_id}: added {len(new_to_add)} embeddings (total: {len(updated_embs)}).")
+        if student and "embeddings" in student:
+            current_embeddings = student["embeddings"]
+            if len(current_embeddings) >= 6:
+                print(f"Student {student_id} already has {len(current_embeddings)} embeddings. Skipping.")
+                return
 
-    else:
-        students_col.update_one(
-            {"student_id": student_id},
-            {"$set": {
-                "name": name,
-                "class_id": class_id,
-                "embedding": new_embeddings,
-                "registered_at": datetime.utcnow(),
-                "type": "student"
-            }},
-            upsert=True
-        )
-        print(f"Inserted new student {student_id} with {len(new_embeddings)} embeddings.")
+            new_to_add = new_embeddings[:6 - len(current_embeddings)]
+            updated_embeddings = current_embeddings + new_to_add
 
-def get_student_by_id(class_id, student_id):
-    db = client[class_id]
-    col = db["students"]
-    return col.find_one({"student_id": student_id})
+            student_col.update_one(
+                {"student_id": student_id},
+                {"$set": {
+                    "name": name,
+                    "class_id": class_id,
+                    "embeddings": updated_embeddings,
+                    "type": "student"
+                }}
+            )
+            print(f"Updated {student_id}: added {len(new_to_add)} embeddings (total: {len(updated_embeddings)}).")
+        else:
+            student_col.update_one(
+                {"student_id": student_id},
+                {"$set": {
+                    "name": name,
+                    "class_id": class_id,
+                    "embeddings": new_embeddings,
+                    "registered_at": datetime.utcnow(),
+                    "type": "student"
+                }},
+                upsert=True
+            )
+            print(f"Inserted new student {student_id} with {len(new_embeddings)} embeddings.")
+
+    def get_all_registered_students(self):
+        return list(self.db["students"].find({"type": "student"}))
+
