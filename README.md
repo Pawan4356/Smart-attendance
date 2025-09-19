@@ -48,8 +48,8 @@ project/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/attendance-system.git
-cd attendance-system
+git clone https://github.com/your-username/Smart-attendance.git
+cd Smart-attendance
 ```
 
 ### 2. Create Virtual Environment & Install Dependencies
