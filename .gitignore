@@ -1,6 +1,7 @@
 # Ignore models
 models/
 !models/.gitkeep
+dataset/
 
 # Ignore local attendance records and test files
 attendance/
