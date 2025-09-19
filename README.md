@@ -48,7 +48,7 @@ project/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/Smart-attendance.git
+git clone https://github.com/Pawan4356/Smart-attendance.git
 cd Smart-attendance
 ```
 
