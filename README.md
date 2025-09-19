@@ -64,9 +64,7 @@ pip install -r requirements.txt
 
 Make sure MongoDB is running. Update connection URI and collection info in ***database*** folder.
 
-### 4. Configure MongoDB
-
-Install Both models Required.
+### 4. Install Both models Required.
 
 ### 5. Run the System
 
